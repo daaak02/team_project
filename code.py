@@ -1,4 +1,33 @@
-import pandas as pd
+﻿import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def load_csv_with_fallback(path):
+	"""Try several encodings and return the first successful DataFrame.
+
+	Tries: utf-8-sig, utf-8, cp949, euc-kr. Logs which encoding succeeded.
+	"""
+	encodings = ['utf-8-sig', 'utf-8', 'cp949', 'euc-kr']
+	for enc in encodings:
+		try:
+			df = pd.read_csv(path, encoding=enc)
+			print(f"Loaded '{path}' with encoding: {enc}")
+			return df
+		except Exception:
+			continue
+	# Last resort: let pandas read with latin1 to avoid failure (may mangle characters)
+	try:
+		df = pd.read_csv(path, encoding='latin1')
+		print(f"Loaded '{path}' with fallback encoding: latin1")
+		return df
+	except Exception as e:
+		raise
+
+
+test = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/test.csv')
+train = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/train.csv')
+building_info = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/building_info.csv')
+
+print(train.shape, test.shape, building_info.shape)
+print(train.head(), test.head(), building_info.head())
