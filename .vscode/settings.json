@@ -1,4 +1,13 @@
 {
     "files.encoding": "utf8",
     "files.autoGuessEncoding": true
+    ,
+    "terminal.integrated.profiles.windows": {
+        "PowerShell-UTF8": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": ["-NoExit","-Command","chcp 65001; $OutputEncoding = [System.Text.Encoding]::UTF8"]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "PowerShell-UTF8"
 }
