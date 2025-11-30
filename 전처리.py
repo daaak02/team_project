@@ -3,17 +3,49 @@ import sys
 import io
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-import seaborn as sns
-import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import lightgbm as lgb
-import warnings
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-warnings.filterwarnings('ignore')
+#데이터 한글 깨짐 해결 코드
+os.environ.setdefault('PYTHONUTF8', '1')
+try:
+	# Python 3.7+ supports reconfigure on TextIOBase
+	sys.stdout.reconfigure(encoding='utf-8')
+	sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+	# Fallback for older versions / environments
+	try:
+		sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+		sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+	except Exception:
+		pass
+
+#한글 깨짐 해결 코드
+def load_csv_with_fallback(path):
+	"""Try several encodings and return the first successful DataFrame.
+
+	Tries: utf-8-sig, utf-8, cp949, euc-kr. Logs which encoding succeeded.
+	"""
+	encodings = ['utf-8-sig', 'utf-8', 'cp949', 'euc-kr']
+	for enc in encodings:
+		try:
+			df = pd.read_csv(path, encoding=enc)
+			print(f"Loaded '{path}' with encoding: {enc}")
+			return df
+		except Exception:
+			continue
+	# Last resort: let pandas read with latin1 to avoid failure (may mangle characters)
+	try:
+		df = pd.read_csv(path, encoding='latin1')
+		print(f"Loaded '{path}' with fallback encoding: latin1")
+		return df
+	except Exception as e:
+		raise
+
+#데이터 불러오기
+test = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/test.csv')
+train = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/train.csv')
+building_info = load_csv_with_fallback(r'C:/Users/daaak/OneDrive/문서/바탕 화면/data/building_info.csv')
 
 # ============================================================
 # UTF-8 인코딩 강제 설정
@@ -29,42 +61,7 @@ except Exception:
     except Exception:
         pass
 
-# ============================================================
-# Windows 한글 폰트 설정
-# ============================================================
-def setup_korean_font_windows():
-    try:
-        fm._rebuild()
-        print("✓ 폰트 캐시 재생성 완료")
-    except:
-        pass
 
-    font_paths = [
-        r"C:\Windows\Fonts\malgun.ttf",
-        r"C:\Windows\Fonts\malgunbd.ttf",
-        r"C:\Windows\Fonts\gulim.ttc",
-        r"C:\Windows\Fonts\batang.ttc",
-        r"C:\Windows\Fonts\NanumGothic.ttf",
-    ]
-
-    available_font = None
-    for font_path in font_paths:
-        if os.path.exists(font_path):
-            available_font = font_path
-            print(f"✓ 폰트 발견: {font_path}")
-            break
-
-    if available_font:
-        font_prop = fm.FontProperties(fname=available_font)
-        matplotlib.rcParams['font.family'] = font_prop.get_name()
-
-    matplotlib.rcParams['font.sans-serif'] = ['Malgun Gothic', 'Gulim', 'Batang', 'NanumGothic']
-    plt.rcParams['font.family'] = 'Malgun Gothic'
-    plt.rcParams['axes.unicode_minus'] = False
-
-    print("✓ 한글 폰트 설정 완료 (Malgun Gothic)")
-
-setup_korean_font_windows()
 
 # ============================================================
 # CSV 로드 함수
